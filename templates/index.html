@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiet-ChatBot</title>
+    <meta name="description"
+        content="Kiet-ChatBot - Trợ lý AI chat hiện đại, hỗ trợ stream, đính kèm file/hình ảnh, lịch sử và chỉnh sửa prompt.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ version }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Favicons (đặt file trong static/images/icons/) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/icons/apple-touch-icon.png') }}?v={{ version }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/icons/favicon-32x32.png') }}?v={{ version }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/icons/favicon-16x16.png') }}?v={{ version }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}?v={{ version }}">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+        <!-- Image preview modal -->
+        <div class="image-modal" id="imageModal" aria-hidden="true">
+            <div class="image-modal-backdrop" id="imageModalBackdrop"></div>
+            <div class="image-modal-content" role="dialog" aria-modal="true" aria-label="Xem ảnh">
+                <button class="image-modal-close" id="imageModalClose" aria-label="Đóng">
+
+                </button>
+                <img id="imageModalImg" alt="Preview" />
+            </div>
+        </div>
+        <!-- Sidebar -->
+        <aside class="sidebar" aria-label="Sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 2L2 8L16 14L30 8L16 2Z" fill="url(#gradient1)" />
+                        <path d="M2 8L16 14L30 8L16 24L2 18L2 8Z" fill="url(#gradient2)" />
+                        <path d="M30 8L16 14L16 24L30 18L30 8Z" fill="url(#gradient3)" />
+                        <defs>
+                            <linearGradient id="gradient1" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#ffffff" />
+                                <stop offset="100%" stop-color="#b8b8b8" />
+                            </linearGradient>
+                            <linearGradient id="gradient2" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#b8b8b8" />
+                                <stop offset="100%" stop-color="#6b6b6b" />
+                            </linearGradient>
+                            <linearGradient id="gradient3" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#8b8b8b" />
+                                <stop offset="100%" stop-color="#5b5b5b" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="logo-text">Kiet-ChatBot</span>
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <button class="new-chat-btn" id="newChatBtn">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 2V18M2 10H18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <span>Cuộc trò chuyện mới</span>
+                </button>
+
+                <div class="chat-history">
+                    <div class="history-header">Gần đây</div>
+                    <div class="history-list" id="historyList">
+                        <!-- History items will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">U</div>
+                    <span>Người dùng</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header class="topbar" aria-label="Topbar">
+                <div class="topbar-left">
+                    <button class="icon-btn" id="sidebarToggle" aria-label="Mở/đóng sidebar" title="Sidebar">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                    <div class="topbar-title">
+                        <div class="brand">Kiet-Chatbot</div>
+                        <div class="hint">Enter để gửi • Shift+Enter xuống dòng</div>
+                    </div>
+                </div>
+
+                <div class="topbar-center">
+                    <div class="model-pill" title="Model">
+                        <span class="model-label">Model</span>
+                        <select id="modelSelect" class="model-select" aria-label="Chọn model">
+                            <option value="gemini-3-pro-high" selected>gemini-3-pro-high (Tư duy Tốt nhất)</option>
+                            <option value="gemini-3-flash">gemini-3-flash (Flash Preview)</option>
+                            <option value="gemini-3-pro-image">gemini-3-pro-image (Tạo ảnh)</option>
+                            <option value="claude-opus-4-5-thinking">claude-opus-4-5-thinking (Tư duy Mạnh nhất)</option>
+                            <option value="claude-sonnet-4-5-thinking">claude-sonnet-4-5-thinking (Chuỗi Tư duy)</option>
+                            <option value="claude-sonnet-4-5">claude-sonnet-4-5 (Tư duy Code)</option>
+                        </select>
+                    </div>
+
+                    <div class="model-pill" id="imageSizePill" title="Kích thước ảnh" style="display:none;">
+                        <span class="model-label">Size</span>
+                        <select id="imageSizeSelect" class="model-select" aria-label="Chọn kích thước ảnh">
+                            <option value="1024x1024" selected>1024x1024 (1:1)</option>
+                            <option value="1280x720">1280x720 (16:9)</option>
+                            <option value="720x1280">720x1280 (9:16)</option>
+                            <option value="1216x896">1216x896 (4:3)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="status-pill" title="Trạng thái server">
+                        <span class="status-dot" id="connDot" aria-hidden="true"></span>
+                        <span class="status-text" id="connText">Connecting</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Messages -->
+            <div class="chat-container" id="chatContainer">
+                <div class="welcome-screen">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">
+                            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                                <circle cx="40" cy="40" r="38" stroke="url(#welcomeGradient)" stroke-width="2" />
+                                <path d="M25 40L35 50L55 30" stroke="url(#welcomeGradient)" stroke-width="3"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <defs>
+                                    <linearGradient id="welcomeGradient" x1="0" y1="0" x2="80" y2="80">
+                                        <stop offset="0%" stop-color="#ffffff" />
+                                        <stop offset="100%" stop-color="#6b6b6b" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <h2>Chào mừng đến với Kiet-ChatBot</h2>
+                        <p>Tôi có thể giúp bạn trả lời câu hỏi, viết nội dung, phân tích dữ liệu và nhiều hơn nữa.</p>
+                        <div class="suggestions">
+                            <button class="suggestion-chip" data-suggestion="Giải thích về AI là gì?">
+                                Giải thích về AI là gì?
+                            </button>
+                            <button class="suggestion-chip" data-suggestion="Viết một bài thơ về công nghệ">
+                                Viết một bài thơ về công nghệ
+                            </button>
+                            <button class="suggestion-chip" data-suggestion="Làm thế nào để học lập trình?">
+                                Làm thế nào để học lập trình?
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container">
+                <!-- File Preview Area -->
+                <div class="file-preview-container" id="filePreviewContainer"></div>
+
+                <div class="input-wrapper">
+                    <!-- Attach Button -->
+                    <button class="attach-btn" id="attachBtn" title="Đính kèm file hoặc hình ảnh" aria-label="Đính kèm">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt,.doc,.docx,.csv,.json"
+                        style="display: none;">
+
+                    <textarea id="messageInput" placeholder="Nhập tin nhắn của bạn..." rows="1" autofocus></textarea>
+                    <button class="send-btn" id="sendBtn" disabled>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-footer">
+                    <p>Kiet-ChatBot có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}?v={{ version }}"></script>
+</body>
+
+</html>
