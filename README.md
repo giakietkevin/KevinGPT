@@ -8,7 +8,7 @@
 - 💬 Chat với AI thông minh
 - 📱 Responsive design
 - 🎨 Dark theme sang trọng
-- 💾 Lưu lịch sử chat
+- 💾 Lưu lịch sử chat.
 - ⚡ Tốc độ phản hồi nhanh
 
 ## Cài đặt
