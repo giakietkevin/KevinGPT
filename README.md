@@ -1,5 +1,5 @@
 # FakeGemini - AI Chat Interface
-Demo Web
+
 Ứng dụng web chat AI với giao diện đẹp mắt và sang trọng, tương tự Google Gemini.
 
 ## Tính năng
